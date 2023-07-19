@@ -13,9 +13,7 @@ function App() {
   return (
     <Router>
     <div className="container my-3">
-      Hello Ji
       <Navbar title='TextUtils' about='About Us'/>
-
       <Routes>
       <Route exact path="/" element={<Textform heading='Enter text here'/>}/>  
       <Route path="/about" element={<About />} />
