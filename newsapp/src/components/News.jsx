@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import NewsItem from './NewsItem'
+import Spinner from './Spinner';
 
 
 export default class News extends Component {
@@ -148,55 +149,63 @@ export default class News extends Component {
     }
 
     async componentDidMount(){
-        let url = "https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=0f5426b4d1db4a34a0eefb9f483ed1c3&page=1&page=1&pageSize=20"
+        let url = `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=0f5426b4d1db4a34a0eefb9f483ed1c3&page=1&page=1&pageSize=${this.props.pageSize}`
+        this.setState({loading:true});
         let data = await fetch(url);
         let parseData = await data.json();
         //console.log(parseData);
         this.setState({articles : parseData.articles,
-            totalResults:parseData.totalResults
+            totalResults:parseData.totalResults,
+            loading:false
             //this is used to know if next page exists or not
         });
     }
 
     handlePreviousClick=async ()=>{
-        let url = `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=0f5426b4d1db4a34a0eefb9f483ed1c3&page=${this.state.page-1}&pageSize=20`
+        let url = `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=0f5426b4d1db4a34a0eefb9f483ed1c3&page=${this.state.page-1}&pageSize=${this.props.pageSize}`
+        this.setState({loading:true});
         let data = await fetch(url);
         let parseData = await data.json();
         //console.log(parseData);
         //this.setState({articles : parseData.articles});/*Can be clubbed as below */
         this.setState({
             page:this.state.page-1,
-            articles : parseData.articles
+            articles : parseData.articles,
+            loading:false
             })
 
     }
     handleNextClick=async ()=>{
-        if(this.state.page+1 > Math.ceil(this.state.totalResults/20)){
-
-        }
-        //Math.ceil -> 4.6=5 , 2.3=3
+        if(!this.state.page+1 > Math.ceil(this.state.totalResults/this.props.pageSize))
+        {//Math.ceil -> 4.6=5 , 2.3=3
         //Math.ceil(this.state.totalResults/pageSize) tells total no. of pages we require to publish all our content
-        else{
-        let url = `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=0f5426b4d1db4a34a0eefb9f483ed1c3&page=${this.state.page+1}&pageSize=20`
+        let url = `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=0f5426b4d1db4a34a0eefb9f483ed1c3&page=${this.state.page+1}&pageSize=${this.props.pageSize}`
+        this.setState({loading:true});
         let data = await fetch(url);
         let parseData = await data.json();
         //console.log(parseData);
         //this.setState({articles : parseData.articles});/*Can be clubbed as below */
         this.setState({
             page:this.state.page+1,
-            articles : parseData.articles
+            articles : parseData.articles,
+            loading:false
         })
-    }
+        }
+    
 
     }
 
 render() {
     return (
       <div className='container my-3'>
-        <h2>Top Headlines</h2>
+        <h2 className='text-center'>Top Headlines</h2>
+        {this.state.loading && <Spinner/>}
+        {/*this tells to only display <spinner> if loading is true*/}
         <div className="row">
-        {this.state.articles.map((element)=>{
-            return(
+        {!this.state.loading && this.state.articles.map((element)=>{
+        //this.setState({loading:true}) is add to only display content once the loading is completed, o all content is display at once rather than in sequence(order of data recieved)
+        //!this.setState({loading:true})-> means if the loading is going on-> halt the display-> begin once loadinh completes
+        return(
             
             <div className="col-md-3 mx-4" key={element.url}>
                 <NewsItem  title={element.title?element.title:""} description={element.description?element.description:""} urlToImage={element.urlToImage} newsUrl={element.url} class="card-img-top" alt="Image Here" />
@@ -210,7 +219,7 @@ render() {
         <div className="container d-flex justify-content-between">
         <button disabled={this.state.page<=1} type="button" className="btn btn-dark mx-3" onClick={this.handlePreviousClick}>&larr; Prevous</button>
         {/*this is used bcz we are in a casss component*/}
-        <button type="button" className="btn btn-dark mx-3" onClick={this.handleNextClick}>Next &rarr;</button>
+        <button disabled={this.state.page+1 > Math.ceil(this.state.totalResults/this.props.pageSize)} type="button" className="btn btn-dark mx-3" onClick={this.handleNextClick}>Next &rarr;</button>
         </div>  
       </div>
     )
